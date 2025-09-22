@@ -11,11 +11,11 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      SONARQUBE_HOST: ${{ secrets.SONARQUBE_HOST }}   # e.g., http://sonarqube.yourdomain.com
+      SONARQUBE_HOST: ${{ secrets.SONARQUBE_HOST }}   # e.g., http://54.237.235.133:9000
       SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }} # SonarQube token stored in GitHub secrets
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}   # AWS Access Key
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }} # AWS Secret Key
-      AWS_REGION: us-east-1  # Change to your region
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: us-east-1
 
     steps:
       - name: Checkout SCM
@@ -34,14 +34,18 @@ jobs:
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
       - name: Clean
         run: mvn clean
 
       - name: SonarQube Scan
-        run: mvn sonar:sonar \
-          -Dsonar.projectKey=maven-project \
-          -Dsonar.host.url=${{ env.SONARQUBE_HOST }} \
-          -Dsonar.login=${{ env.SONARQUBE_TOKEN }}
+        run: |
+          mvn clean verify sonar:sonar \
+            -Dsonar.projectKey=maven-project \
+            -Dsonar.host.url="${{ env.SONARQUBE_HOST }}" \
+            -Dsonar.login="${{ env.SONARQUBE_TOKEN }}"
 
       - name: Wait for Quality Gate
         run: |
